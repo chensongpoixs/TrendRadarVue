@@ -77,7 +77,7 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, _from, next) => {
-  document.title = `${to.meta.title || 'TrendRadar'} - 热点新闻聚合`
+  document.title = `${to.meta.title || '趋势雷达'} - 热点新闻聚合`
   next()
 })
 

@@ -4,7 +4,7 @@
     <el-card class="welcome-card">
       <template #header>
         <div class="card-header">
-          <span>欢迎使用 TrendRadar</span>
+          <span>欢迎使用 趋势雷达</span>
         </div>
       </template>
       <div class="welcome-content">
