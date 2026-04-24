@@ -67,6 +67,8 @@ export interface NewsListResponse {
   id_to_name: Record<string, string>
   failed_ids: string[]
   crawl_time: string
+  /** database = 仅读库内数据，不触发外网热榜拉取 */
+  source?: string
 }
 
 // 系统状态
@@ -111,4 +113,89 @@ export interface TopicTrendParams {
   analysis_type?: 'trend' | 'lifecycle' | 'viral' | 'predict'
   date_range?: string
   granularity?: string
+}
+
+/** 热榜按小时快照表一行（后端 hotlist_snapshots） */
+export interface HotlistSnapshotRow {
+  id: number
+  date_local: string
+  hour_local: number
+  source_id: string
+  source_name: string
+  title: string
+  url: string
+  mobile_url: string
+  rank: number
+  captured_at: string
+}
+
+export interface SnapshotDateInfo {
+  date: string
+  row_count: number
+}
+
+export interface SnapshotHourStat {
+  hour: number
+  row_count: number
+  first_captured: string
+  last_captured: string
+}
+
+export interface SnapshotDaySummaryData {
+  date: string
+  timezone: string
+  total_rows: number
+  hours: SnapshotHourStat[]
+  id_to_name: Record<string, string>
+}
+
+export interface SnapshotHourData {
+  date: string
+  hour: number
+  timezone: string
+  items: HotlistSnapshotRow[]
+  id_to_name: Record<string, string>
+}
+
+/** 整日热榜聚类后的行业 AI 研报（GET/POST /news/snapshots/:date/insights） */
+export interface SnapshotDayInsightsData {
+  date: string
+  timezone: string
+  /** GET：是否已有缓存；POST 成功恒为 true */
+  cached: boolean
+  content: string
+  model?: string
+  updated_at?: string
+  unique_titles?: number
+  raw_snapshot_rows?: number
+  digest_truncated?: boolean
+}
+
+/** POST /news/analyze 返回 */
+export interface NewsArticleAnalyzeData {
+  summary: string
+  title: string
+  url: string
+  content_fetched: boolean
+  extracted_runes: number
+}
+
+/** POST /ai/chat 请求消息 */
+export interface AiChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+export interface AiTokenUsage {
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+}
+
+/** POST /ai/chat 成功数据 */
+export interface AiChatResponseData {
+  message: { role: string; content: string }
+  usage: AiTokenUsage
+  model: string
+  timeout?: string
 }

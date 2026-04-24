@@ -5,61 +5,179 @@
       <template #header>
         <div class="card-header">
           <span>欢迎使用 趋势雷达</span>
+          <el-space wrap>
+            <router-link
+              class="link-history"
+              :to="{ name: 'AIChat' }"
+            >
+              大模型对话
+            </router-link>
+            <router-link
+              class="link-history"
+              :to="{ name: 'NewsByDate', params: { date: todayYMD } }"
+            >
+              按日/小时热榜
+            </router-link>
+          </el-space>
         </div>
       </template>
       <div class="welcome-content">
-        <h1>🔍 热点新闻聚合与分析工具</h1>
-        <p>快速了解全网热点，智能筛选关注内容</p>
+        <h1>行业热点雷达</h1>
+        <p class="welcome-sub">多源热榜 · RSS 订阅 · 话题聚合，一站式追踪全网信号</p>
       </div>
     </el-card>
 
-    <!-- 统计卡片 -->
+    <!-- 核心 KPI（业界常见指标口径） -->
     <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
-        <el-card shadow="hover">
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
             <el-icon class="stat-icon" color="#409EFF"><Document /></el-icon>
             <div class="stat-content">
               <div class="stat-value">{{ newsStore.newsCount }}</div>
-              <div class="stat-label">新闻总数</div>
+              <div class="stat-label">热榜条目</div>
+              <div class="stat-hint">当前抓取条数</div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="hover" class="kpi-card">
+          <div class="stat-card">
+            <el-icon class="stat-icon" color="#5b8ff9"><DataAnalysis /></el-icon>
+            <div class="stat-content">
+              <div class="stat-value">{{ newsStore.hotlistPlatformCount }}</div>
+              <div class="stat-label">平台覆盖</div>
+              <div class="stat-hint">有数据平台数</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
             <el-icon class="stat-icon" color="#67C23A"><Position /></el-icon>
             <div class="stat-content">
               <div class="stat-value">{{ newsStore.rssCount }}</div>
-              <div class="stat-label">RSS 订阅</div>
+              <div class="stat-label">RSS 条目</div>
+              <div class="stat-hint">订阅源条数</div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
+      <el-col :xs="24" :sm="12" :md="6">
+        <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
             <el-icon class="stat-icon" color="#E6A23C"><TrendCharts /></el-icon>
             <div class="stat-content">
-              <div class="stat-value">{{ topics.length }}</div>
-              <div class="stat-label">热门话题</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <el-icon class="stat-icon" color="#F56C6C"><Clock /></el-icon>
-            <div class="stat-content">
-              <div class="stat-value">{{ formatTime(newsStore.lastUpdateTime) }}</div>
-              <div class="stat-label">最后更新</div>
+              <div class="stat-value">{{ healthPercent }}</div>
+              <div class="stat-label">抓取健康度</div>
+              <div class="stat-hint">成功平台 / 已尝试</div>
             </div>
           </div>
         </el-card>
       </el-col>
     </el-row>
+
+    <el-row :gutter="20" class="second-kpi">
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div class="stat-card compact">
+            <div class="stat-content">
+              <div class="stat-value sm">{{ failedPlatformCount }}</div>
+              <div class="stat-label">失败源</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div class="stat-card compact">
+            <div class="stat-content">
+              <div class="stat-value sm">{{ topics.length }}</div>
+              <div class="stat-label">话题数</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card shadow="hover">
+          <div class="stat-card compact time-row">
+            <el-icon class="stat-icon" color="#F56C6C"><Clock /></el-icon>
+            <div class="stat-content">
+              <div class="stat-label">数据时间</div>
+              <div class="stat-value sm">{{ fullTime(newsStore.lastUpdateTime) }}</div>
+              <div v-if="newsStore.newsDataSource === 'database'" class="stat-hint">
+                仅展示后端库内数据；外网热榜与 RSS 由定时任务在整点/配置周期内拉取并写入
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 有快照的历史日：可下钻到按日/按小时页 -->
+    <el-card v-loading="snapshotLoading" class="snapshot-dates-card">
+      <template #header>
+        <div class="card-header">
+          <span>历史热榜记录</span>
+          <el-space>
+            <el-tag v-if="snapshotTimezone" type="info" size="small">{{ snapshotTimezone }}</el-tag>
+            <router-link
+              class="link-history"
+              :to="{ name: 'NewsByDate', params: { date: todayYMD } }"
+            >
+              今天详情
+            </router-link>
+          </el-space>
+        </div>
+      </template>
+      <el-empty
+        v-if="!snapshotLoading && snapshotDates.length === 0"
+        description="暂无历史快照；调度或触发抓取后，会按天、按小时累积，此处自动列出有数据的日期"
+        :image-size="72"
+      />
+      <div v-else class="snapshot-chips">
+        <router-link
+          v-for="d in snapshotDates"
+          :key="d.date"
+          :to="{ name: 'NewsByDate', params: { date: d.date } }"
+          class="snap-link"
+        >
+          <el-tag
+            :type="d.date === todayYMD ? 'primary' : 'info'"
+            effect="plain"
+            class="snap-tag"
+          >
+            <span class="snap-label">{{ dateChipLabel(d.date) }}</span>
+            <span class="snap-meta">{{ d.row_count.toLocaleString() }} 条</span>
+          </el-tag>
+        </router-link>
+      </div>
+    </el-card>
+
+    <!-- 平台来源分布（业界看板：结构占比） -->
+    <el-card class="dist-card" v-if="platformRows.length">
+      <template #header>
+        <div class="card-header">
+          <span>多平台来源分布</span>
+          <el-tag type="info" size="small">条数 / 占比</el-tag>
+        </div>
+      </template>
+      <el-table :data="platformRows" size="small" stripe max-height="280">
+        <el-table-column prop="name" label="平台" min-width="140" />
+        <el-table-column prop="count" label="条数" width="90" align="right" />
+        <el-table-column label="占比" min-width="200">
+          <template #default="{ row }">
+            <el-progress
+              :percentage="row.pct"
+              :stroke-width="10"
+              :format="() => row.pct.toFixed(1) + '%'"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
     <!-- 新闻列表和热门话题 -->
     <el-row :gutter="20">
@@ -78,7 +196,7 @@
           <div v-else class="news-list">
             <div
               v-for="news in displayedNews"
-              :key="news.id"
+              :key="newsItemKey(news)"
               class="news-item"
             >
               <div class="news-rank" :class="getRankClass(news.rank)">
@@ -93,6 +211,11 @@
                 <div class="news-meta">
                   <span class="news-source">{{ newsStore.idToName[news.source_id] || news.source_id }}</span>
                   <span class="news-time">{{ formatTime(news.crawl_time) }}</span>
+                  <NewsAiAnalyzeButton
+                    :title="news.title"
+                    :url="news.url"
+                    :source-name="newsStore.idToName[news.source_id] || news.source_id"
+                  />
                 </div>
               </div>
             </div>
@@ -137,18 +260,66 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { useNewsStore } from '@/stores/news'
-import type { Topic } from '@/types'
+import { getSnapshotAvailableDates } from '@/api/news'
+import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
+import type { NewsItem, Topic, SnapshotDateInfo } from '@/types'
 
 const newsStore = useNewsStore()
+const todayYMD = dayjs().format('YYYY-MM-DD')
+
+const snapshotLoading = ref(false)
+const snapshotDates = ref<SnapshotDateInfo[]>([])
+const snapshotTimezone = ref('')
 
 const topics = ref<Topic[]>([])
 const topicMode = ref('current')
 const displayLimit = ref(10)
 
-// 显示的新闻列表
+/** 按排名合并各平台后截取，便于列表阅读 */
 const displayedNews = computed(() => {
-  return newsStore.allNews.slice(0, displayLimit.value)
+  const list: NewsItem[] = []
+  Object.values(newsStore.newsData).forEach((items) => {
+    list.push(...items)
+  })
+  list.sort((a, b) => (a.rank || 999) - (b.rank || 999))
+  return list.slice(0, displayLimit.value)
 })
+
+const platformRows = computed(() => {
+  const total = newsStore.newsCount || 1
+  const rows: { id: string; name: string; count: number; pct: number }[] = []
+  Object.entries(newsStore.newsData).forEach(([id, items]) => {
+    const c = items?.length ?? 0
+    if (c === 0) return
+    rows.push({
+      id,
+      name: newsStore.idToName[id] || id,
+      count: c,
+      pct: (c / total) * 100,
+    })
+  })
+  return rows.sort((a, b) => b.count - a.count)
+})
+
+const failedPlatformCount = computed(() => newsStore.failedIds.length)
+
+const healthPercent = computed(() => {
+  const ok = newsStore.hotlistPlatformCount
+  const fail = newsStore.failedIds.length
+  const t = ok + fail
+  if (t === 0) return '—'
+  return `${Math.round((ok / t) * 100)}%`
+})
+
+function newsItemKey(n: NewsItem) {
+  if (n.id) return `id-${n.id}`
+  return `${n.source_id}-${n.rank}-${n.title}`
+}
+
+function fullTime(timeStr: string) {
+  if (!timeStr) return '—'
+  return dayjs(timeStr).format('YYYY-MM-DD HH:mm:ss')
+}
 
 // 加载时间格式化
 function formatTime(timeStr: string): string {
@@ -172,6 +343,28 @@ function loadMore() {
   displayLimit.value += 10
 }
 
+function dateChipLabel(ymd: string): string {
+  if (ymd === todayYMD) return '今天'
+  if (ymd === dayjs().subtract(1, 'day').format('YYYY-MM-DD')) return '昨天'
+  return ymd
+}
+
+async function loadSnapshotDates() {
+  snapshotLoading.value = true
+  try {
+    const res = await getSnapshotAvailableDates(90)
+    if (res.data) {
+      snapshotDates.value = res.data.dates ?? []
+      snapshotTimezone.value = res.data.timezone || ''
+    }
+  } catch (e) {
+    console.error('loadSnapshotDates', e)
+    snapshotDates.value = []
+  } finally {
+    snapshotLoading.value = false
+  }
+}
+
 // 加载热门话题
 async function loadTopics() {
   try {
@@ -189,8 +382,12 @@ watch(topicMode, () => {
 
 // 初始化
 onMounted(async () => {
+  void loadSnapshotDates()
   try {
-    await newsStore.fetchLatestNews()
+    await Promise.all([
+      newsStore.fetchLatestNews(undefined, 100, true),
+      newsStore.fetchLatestRSS(),
+    ])
     await loadTopics()
   } catch (error) {
     console.error('Failed to load data:', error)
@@ -214,11 +411,88 @@ onMounted(async () => {
   margin-bottom: 8px;
 }
 
-.welcome-content p {
+.welcome-content p,
+.welcome-sub {
   color: var(--el-text-color-secondary);
 }
 
+.welcome-sub {
+  margin: 0;
+  font-size: 14px;
+}
+
 .stats-row {
+  margin-bottom: 16px;
+}
+
+.second-kpi {
+  margin-bottom: 20px;
+}
+
+.snapshot-dates-card {
+  margin-bottom: 20px;
+}
+
+.snapshot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+}
+
+.snap-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.snap-tag {
+  cursor: pointer;
+  max-width: 100%;
+}
+.snap-tag :deep(.el-tag__content) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.snap-label {
+  font-weight: 500;
+}
+.snap-meta {
+  opacity: 0.85;
+  font-size: 12px;
+}
+.snap-link:hover .snap-tag {
+  filter: brightness(1.05);
+}
+
+.kpi-card {
+  height: 100%;
+}
+
+.stat-hint {
+  font-size: 11px;
+  color: var(--el-text-color-placeholder);
+  margin-top: 4px;
+}
+
+.stat-card.compact {
+  padding: 6px 10px;
+}
+
+.stat-card.compact .stat-value.sm {
+  font-size: 18px;
+}
+
+.time-row {
+  align-items: center;
+}
+
+.time-row .stat-content {
+  text-align: left;
+}
+
+.dist-card {
   margin-bottom: 20px;
 }
 
@@ -252,6 +526,15 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.link-history {
+  font-size: 14px;
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+.link-history:hover {
+  text-decoration: underline;
 }
 
 .news-list {
@@ -321,6 +604,10 @@ onMounted(async () => {
 }
 
 .news-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
 }

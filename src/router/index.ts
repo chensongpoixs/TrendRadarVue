@@ -39,6 +39,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '数据分析' },
   },
   {
+    path: '/chat',
+    name: 'AIChat',
+    component: () => import('@/views/chat/index.vue'),
+    meta: { title: '大模型对话' },
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/settings/index.vue'),

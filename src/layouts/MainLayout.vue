@@ -59,7 +59,7 @@
             <el-icon v-if="isDark"><Sunny /></el-icon>
             <el-icon v-else><Moon /></el-icon>
           </el-button>
-          <el-button @click="refreshData">
+          <el-button title="从服务器重新加载已持久化的热榜与 RSS（不触发外网抓取）" @click="refreshData">
             <el-icon><Refresh /></el-icon>
           </el-button>
         </div>

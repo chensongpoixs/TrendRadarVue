@@ -43,7 +43,10 @@
       <template #header>
         <div class="card-header">
           <span>新闻列表</span>
-          <span class="count">共 {{ newsList.length }} 条</span>
+          <div class="header-right">
+            <span v-if="newsStore.newsDataSource === 'database'" class="source-hint">库内数据 · 外网由定时任务拉取</span>
+            <span class="count">共 {{ newsList.length }} 条</span>
+          </div>
         </div>
       </template>
 
@@ -75,6 +78,11 @@
                 </a>
               </h3>
               <div class="news-actions">
+                <NewsAiAnalyzeButton
+                  :title="news.title"
+                  :url="news.url"
+                  :source-name="newsStore.idToName[news.source_id] || news.source_id"
+                />
                 <el-button
                   type="primary"
                   link
@@ -120,6 +128,7 @@ import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { useNewsStore } from '@/stores/news'
 import { searchNews } from '@/api/news'
+import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
 import type { NewsItem } from '@/types'
 
 const newsStore = useNewsStore()
@@ -258,6 +267,17 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.source-hint {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
 .count {

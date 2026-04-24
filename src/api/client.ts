@@ -1,9 +1,10 @@
 import axios, { AxiosInstance, AxiosError } from 'axios'
 import type { ApiResponse } from '@/types'
+import { getApiBaseURL } from '@/config/runtime'
 
-// 创建 axios 实例
+// 创建 axios 实例（基地址来自 /config.js 中 window.__TRENDRADAR_CONFIG__，或 Vite 环境变量，或默认 /api/v1）
 const request: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: getApiBaseURL(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
