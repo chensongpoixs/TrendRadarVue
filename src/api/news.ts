@@ -5,6 +5,7 @@ import type {
   Topic,
   ApiResponse,
   SearchParams,
+  MergedNewsItem,
   SnapshotDateInfo,
   SnapshotDaySummaryData,
   SnapshotDayInsightsData,
@@ -37,10 +38,10 @@ export function getLatestNews(
 ): Promise<
   ApiResponse<{
     news: Record<string, NewsItem[]>
+    merged_news?: MergedNewsItem[]
     id_to_name: Record<string, string>
     failed_ids?: string[]
     crawl_time: string
-    /** 为 database 表示仅读本地库，不触发外网抓取 */
     source?: string
   }>
 > {

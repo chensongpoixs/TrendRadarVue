@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { NewsItem, RSSItem, Topic } from '@/types'
+import type { NewsItem, RSSItem, Topic, MergedNewsItem } from '@/types'
 import { getLatestNews, getTrendingTopics, getLatestRSS } from '@/api/news'
 
 export const useNewsStore = defineStore('news', () => {
   // State
   const newsData = ref<Record<string, NewsItem[]>>({})
+  const mergedNews = ref<MergedNewsItem[]>([])
   const rssData = ref<Record<string, RSSItem[]>>({})
   const topics = ref<Topic[]>([])
   const idToName = ref<Record<string, string>>({})
@@ -54,6 +55,7 @@ export const useNewsStore = defineStore('news', () => {
       const response = await getLatestNews(platforms, limit, includeUrl)
       if (response.data) {
         newsData.value = response.data.news
+        mergedNews.value = response.data.merged_news ?? []
         idToName.value = response.data.id_to_name
         failedIds.value = response.data.failed_ids ?? []
         lastUpdateTime.value = response.data.crawl_time
@@ -108,6 +110,7 @@ export const useNewsStore = defineStore('news', () => {
 
   function clearData() {
     newsData.value = {}
+    mergedNews.value = []
     rssData.value = {}
     topics.value = []
     failedIds.value = []
@@ -118,6 +121,7 @@ export const useNewsStore = defineStore('news', () => {
   return {
     // State
     newsData,
+    mergedNews,
     rssData,
     topics,
     idToName,

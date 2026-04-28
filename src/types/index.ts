@@ -61,9 +61,29 @@ export interface ApiResponse<T = any> {
   message?: string
 }
 
+// 跨平台合并新闻来源
+export interface NewsSource {
+  source_id: string
+  source_name: string
+  rank: number
+  url: string
+}
+
+// 跨平台合并后的新闻条目
+export interface MergedNewsItem {
+  title: string
+  url: string
+  mobile_url: string
+  sources: NewsSource[]
+  max_rank: number
+  crawl_time: string
+  total_count: number
+}
+
 // 新闻列表响应
 export interface NewsListResponse {
   news: Record<string, NewsItem[]>
+  merged_news?: MergedNewsItem[]
   id_to_name: Record<string, string>
   failed_ids: string[]
   crawl_time: string

@@ -44,8 +44,12 @@
         <div class="card-header">
           <span>新闻列表</span>
           <div class="header-right">
+            <el-radio-group v-model="viewMode" size="small" @change="handleViewChange">
+              <el-radio-button value="platform">按平台</el-radio-button>
+              <el-radio-button value="merged">合并视图</el-radio-button>
+            </el-radio-group>
             <span v-if="newsStore.newsDataSource === 'database'" class="source-hint">库内数据 · 外网由定时任务拉取</span>
-            <span class="count">共 {{ newsList.length }} 条</span>
+            <span class="count">共 {{ displayList.length }} 条</span>
           </div>
         </div>
       </template>
@@ -56,9 +60,63 @@
       </div>
 
       <!-- 空状态 -->
-      <el-empty v-else-if="newsList.length === 0" description="暂无新闻数据" />
+      <el-empty v-else-if="displayList.length === 0" description="暂无新闻数据" />
 
-      <!-- 新闻列表 -->
+      <!-- 合并视图 -->
+      <div v-else-if="viewMode === 'merged'" class="news-list">
+        <div
+          v-for="(news, index) in paginatedNews"
+          :key="'m-' + index"
+          class="news-item"
+        >
+          <div class="news-left">
+            <div class="news-rank" :class="getRankClass(news.max_rank)">
+              {{ news.max_rank }}
+            </div>
+          </div>
+          <div class="news-right">
+            <div class="news-header">
+              <h3 class="news-title">
+                <a :href="news.url" target="_blank" rel="noopener noreferrer">
+                  {{ news.title }}
+                </a>
+              </h3>
+              <div class="news-actions">
+                <NewsAiAnalyzeButton
+                  :title="news.title"
+                  :url="news.url"
+                  :source-name="news.sources[0]?.source_name || ''"
+                />
+                <el-button
+                  type="primary"
+                  link
+                  @click="copyLink(news.url)"
+                >
+                  <el-icon><Link /></el-icon>
+                  复制链接
+                </el-button>
+              </div>
+            </div>
+            <div class="news-meta">
+              <el-tag
+                v-for="source in news.sources"
+                :key="source.source_id"
+                size="small"
+                :type="news.sources.length > 1 ? 'warning' : 'info'"
+                class="source-tag"
+              >
+                {{ source.source_name }} #{{ source.rank }}
+              </el-tag>
+              <span class="news-time">{{ formatTime(news.crawl_time) }}</span>
+              <span v-if="news.total_count > 1" class="news-count">
+                跨 {{ news.total_count }} 平台
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 按平台视图（原有） -->
       <div v-else class="news-list">
         <div
           v-for="news in paginatedNews"
@@ -129,9 +187,12 @@ import dayjs from 'dayjs'
 import { useNewsStore } from '@/stores/news'
 import { searchNews } from '@/api/news'
 import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
-import type { NewsItem } from '@/types'
+import type { NewsItem, MergedNewsItem } from '@/types'
 
 const newsStore = useNewsStore()
+
+// 视图模式：platform = 按平台分组，merged = 跨平台合并
+const viewMode = ref<'platform' | 'merged'>('platform')
 
 // 搜索状态
 const searchQuery = ref('')
@@ -140,9 +201,15 @@ const searching = ref(false)
 
 // 列表状态
 const newsList = ref<NewsItem[]>([])
+const mergedList = ref<MergedNewsItem[]>([])
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(20)
+
+// 当前显示的列表
+const displayList = computed(() => {
+  return viewMode.value === 'merged' ? mergedList.value : newsList.value
+})
 
 // 平台列表
 const platforms = ref([
@@ -158,7 +225,8 @@ const platforms = ref([
 const paginatedNews = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return newsList.value.slice(start, end)
+  const list = displayList.value
+  return list.slice(start, end)
 })
 
 // 加载新闻
@@ -166,15 +234,16 @@ async function loadNews() {
   loading.value = true
   try {
     await newsStore.fetchLatestNews()
-    // 扁平化新闻列表
+    // 扁平化新闻列表（按平台视图）
     newsList.value = []
     Object.values(newsStore.newsData).forEach(items => {
       newsList.value.push(...items)
     })
-    // 按时间排序
     newsList.value.sort((a, b) => {
       return new Date(b.crawl_time).getTime() - new Date(a.crawl_time).getTime()
     })
+    // 合并视图
+    mergedList.value = newsStore.mergedNews
   } catch (error: any) {
     ElMessage.error('加载新闻失败：' + error.message)
   } finally {
@@ -209,6 +278,11 @@ async function handleSearch() {
   } finally {
     searching.value = false
   }
+}
+
+// 视图切换
+function handleViewChange() {
+  currentPage.value = 1
 }
 
 // 分页处理
@@ -388,6 +462,10 @@ onMounted(() => {
 .news-count {
   display: flex;
   align-items: center;
+}
+
+.source-tag {
+  margin-right: 4px;
 }
 
 .pagination {
