@@ -65,7 +65,7 @@
       <!-- 合并视图 -->
       <div v-else-if="viewMode === 'merged'" class="news-list">
         <div
-          v-for="(news, index) in paginatedNews"
+          v-for="(news, index) in paginatedMerged"
           :key="'m-' + index"
           class="news-item"
         >
@@ -211,6 +211,19 @@ const displayList = computed(() => {
   return viewMode.value === 'merged' ? mergedList.value : newsList.value
 })
 
+// 分页后的新闻列表
+const paginatedNews = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return newsList.value.slice(start, end)
+})
+
+const paginatedMerged = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return mergedList.value.slice(start, end)
+})
+
 // 平台列表
 const platforms = ref([
   { id: 'weibo', name: '微博' },
@@ -220,14 +233,6 @@ const platforms = ref([
   { id: 'bilibili', name: 'B 站' },
   { id: 'douyin', name: '抖音' },
 ])
-
-// 分页后的新闻列表
-const paginatedNews = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  const list = displayList.value
-  return list.slice(start, end)
-})
 
 // 加载新闻
 async function loadNews() {
