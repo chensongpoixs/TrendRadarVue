@@ -42,3 +42,11 @@ export function listAvailableDates(source = 'both'): Promise<ApiResponse<{
     params: { source },
   })
 }
+
+// 每日新闻导出到 ModelScope
+export function postDailyExport(date?: string): Promise<ApiResponse<{
+  date: string
+  message: string
+}>> {
+  return request.post('/daily-export', { date })
+}

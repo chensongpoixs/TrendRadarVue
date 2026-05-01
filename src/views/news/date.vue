@@ -20,9 +20,20 @@
       <template #header>
         <div class="card-header">
           <span>日汇总</span>
-          <el-tag v-if="totalRows >= 0" type="success" size="small">
-            共 {{ totalRows }} 条快照
-          </el-tag>
+          <el-space wrap>
+            <el-tag v-if="totalRows >= 0" type="success" size="small">
+              共 {{ totalRows }} 条快照
+            </el-tag>
+            <el-button
+              type="primary"
+              size="small"
+              :loading="exporting"
+              :disabled="totalRows <= 0"
+              @click="syncToModelScope"
+            >
+              {{ exporting ? '同步中...' : '同步到 ModelScope' }}
+            </el-button>
+          </el-space>
         </div>
       </template>
       <el-empty v-if="!summaryLoading && totalRows === 0" description="该日尚无热榜快照（调度抓取后会按小时累积）" />
@@ -168,6 +179,7 @@ import {
   postSnapshotDayInsights,
   getSnapshotHour,
 } from '@/api/news'
+import { postDailyExport } from '@/api/system'
 import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
 import { formatInsightBodyHtml } from '@/utils/insightDisplay'
 import type { HotlistSnapshotRow, SnapshotHourStat } from '@/types'
@@ -197,6 +209,30 @@ const insightError = ref('')
 const currentDate = computed(() => (route.params.date as string) || '')
 
 const insightBodyHtml = computed(() => formatInsightBodyHtml(insightsContent.value))
+
+// ModelScope 同步
+const exporting = ref(false)
+
+async function syncToModelScope() {
+  const date = currentDate.value
+  if (!date) {
+    ElMessage.warning('请先选择日期')
+    return
+  }
+  exporting.value = true
+  try {
+    const res = await postDailyExport(date)
+    if (res.success) {
+      ElMessage.success(`${date} 正在同步到 ModelScope，请稍后查看仓库`)
+    } else {
+      ElMessage.error(res.error || '同步失败')
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.message || '同步请求失败')
+  } finally {
+    exporting.value = false
+  }
+}
 
 const hourCountMap = computed(() => {
   const m: Record<number, number> = {}
