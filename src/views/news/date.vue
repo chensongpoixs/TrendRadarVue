@@ -661,30 +661,228 @@ onMounted(async () => {
 }
 
 .insight-body {
-  line-height: 1.65;
+  line-height: 1.75;
   font-size: var(--tr-font-size-base);
   color: var(--el-text-color-primary);
+  word-break: break-word;
 }
 
-.insight-body :deep(.insight-h2) {
-  font-size: 1.05rem;
+/* ---- Markdown 企业级样式 ---- */
+
+/* 二级标题 — 维度分隔 */
+.insight-body :deep(h2) {
+  font-size: 1.1rem;
   font-weight: 600;
-  margin: 1em 0 0.5em;
+  margin: 1.6em 0 0.6em;
   color: var(--el-text-color-primary);
   border-bottom: 1px solid var(--el-border-color-lighter);
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+  line-height: 1.4;
 }
 
-.insight-body :deep(.insight-h3) {
-  font-size: 0.95rem;
+/* 三级标题 — 子主题 */
+.insight-body :deep(h3) {
+  font-size: 1rem;
   font-weight: 600;
-  margin: 1em 0 0.4em;
+  margin: 1.2em 0 0.5em;
   color: var(--el-color-primary);
+  padding-left: 10px;
+  border-left: 3px solid var(--el-color-primary);
+  line-height: 1.4;
 }
 
+/* 段落 */
+.insight-body :deep(p) {
+  margin: 0.8em 0;
+  line-height: 1.75;
+}
+
+/* 加粗 */
 .insight-body :deep(strong) {
   font-weight: 600;
   color: var(--el-text-color-primary);
+}
+
+/* 无序列表 */
+.insight-body :deep(ul) {
+  margin: 0.6em 0;
+  padding-left: 1.2em;
+  line-height: 1.7;
+}
+
+.insight-body :deep(ul li) {
+  margin-bottom: 6px;
+  list-style-type: disc;
+}
+
+.insight-body :deep(ul ul) {
+  margin: 4px 0;
+}
+
+.insight-body :deep(ul ul li) {
+  list-style-type: circle;
+  margin-bottom: 4px;
+}
+
+/* 有序列表 */
+.insight-body :deep(ol) {
+  margin: 0.6em 0;
+  padding-left: 1.2em;
+  line-height: 1.7;
+}
+
+.insight-body :deep(ol li) {
+  margin-bottom: 6px;
+}
+
+/* 引用块 */
+.insight-body :deep(blockquote) {
+  margin: 0.8em 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--el-color-primary-light-3);
+  background: var(--el-fill-color-lighter);
+  border-radius: 0 var(--tr-radius-sm) var(--tr-radius-sm) 0;
+  color: var(--el-text-color-secondary);
+  font-style: italic;
+}
+
+.insight-body :deep(blockquote p) {
+  margin: 0.4em 0;
+}
+
+/* 行内代码 */
+.insight-body :deep(code) {
+  background: var(--el-fill-color);
+  color: var(--el-color-danger);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+/* 代码块 */
+.insight-body :deep(pre) {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 14px 16px;
+  border-radius: var(--tr-radius-md);
+  overflow-x: auto;
+  margin: 0.8em 0;
+  line-height: 1.5;
+}
+
+.insight-body :deep(pre code) {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.88em;
+}
+
+/* 表格容器 — 响应式滚动 */
+.insight-body :deep(.table-wrapper),
+.insight-body :deep(table) {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* 表格 */
+.insight-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.95em;
+}
+
+.insight-body :deep(th),
+.insight-body :deep(td) {
+  border: 1px solid var(--el-border-color-lighter);
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.insight-body :deep(th) {
+  background: var(--el-fill-color);
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.insight-body :deep(tr:nth-child(even) td) {
+  background: var(--el-fill-color-lighter);
+}
+
+.insight-body :deep(tr:hover td) {
+  background: var(--el-fill-color-light);
+}
+
+/* 链接 */
+.insight-body :deep(a) {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.insight-body :deep(a:hover) {
+  text-decoration: underline;
+}
+
+/* 分割线 */
+.insight-body :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--el-border-color-lighter);
+  margin: 1.2em 0;
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 767px) {
+  .insight-body {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .insight-body :deep(h2) {
+    font-size: 1rem;
+  }
+
+  .insight-body :deep(h3) {
+    font-size: 0.95rem;
+  }
+
+  .insight-body :deep(th),
+  .insight-body :deep(td) {
+    padding: 8px 10px;
+    font-size: 0.88em;
+  }
+}
+
+/* ---- 暗色模式 ---- */
+body.dark .insight-body :deep(blockquote) {
+  background: rgba(255, 255, 255, 0.04);
+  border-left-color: var(--el-color-primary-light-5);
+}
+
+body.dark .insight-body :deep(pre) {
+  background: #0d1117;
+}
+
+body.dark .insight-body :deep(th) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark .insight-body :deep(tr:nth-child(even) td) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+body.dark .insight-body :deep(tr:hover td) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark .insight-body :deep(hr) {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .insight-err {
