@@ -12,11 +12,11 @@
         </div>
       </template>
 
-      <el-row :gutter="20">
+      <el-row :gutter="isMobile ? 10 : 20">
         <el-col
           v-for="feed in rssFeeds"
           :key="feed.id"
-          :span="8"
+          :xs="12" :md="8"
         >
           <el-card shadow="hover" class="feed-card">
             <div class="feed-header">
@@ -111,9 +111,11 @@ import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { useNewsStore } from '@/stores/news'
 import { getRSSFeedsStatus } from '@/api/news'
+import { useResponsive } from '@/composables/useResponsive'
 import type { RSSItem } from '@/types'
 
 const newsStore = useNewsStore()
+const { isMobile } = useResponsive()
 
 // 状态
 const loading = ref(false)
@@ -192,60 +194,78 @@ onMounted(async () => {
 
 <style scoped>
 .rss-page {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .rss-page {
+    padding: var(--tr-spacing-md);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--tr-spacing-xs);
 }
 
 .count {
   color: var(--el-text-color-secondary);
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
 }
 
 /* RSS 源卡片 */
 .feeds-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .feed-card {
-  transition: all 0.3s;
+  transition: all var(--tr-transition-normal);
+  margin-bottom: var(--tr-spacing-sm);
 }
 
-.feed-card:hover {
-  transform: translateY(-2px);
+@media (min-width: 768px) {
+  .feed-card {
+    margin-bottom: 0;
+  }
+  .feed-card:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .feed-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--tr-spacing-sm);
 }
 
 .feed-name {
-  font-size: 16px;
+  font-size: var(--tr-font-size-md);
   font-weight: 500;
   color: var(--el-text-color-primary);
 }
 
 .feed-url {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
-  margin-bottom: 8px;
+  margin-bottom: var(--tr-spacing-xs);
   display: flex;
   align-items: center;
   gap: 4px;
+  overflow: hidden;
 }
 
 .feed-url a {
   color: var(--el-color-primary);
   text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .feed-url a:hover {
@@ -253,40 +273,36 @@ onMounted(async () => {
 }
 
 .feed-stats {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
 }
 
 /* RSS 新闻卡片 */
 .rss-news-card {
-  margin-top: 20px;
-}
-
-.loading-container {
-  padding: 20px 0;
+  margin-top: var(--tr-spacing-md);
 }
 
 .rss-groups {
-  padding: 10px 0;
+  padding: var(--tr-spacing-sm) 0;
 }
 
 .rss-group {
-  margin-bottom: 24px;
+  margin-bottom: var(--tr-spacing-lg);
 }
 
 .group-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: var(--tr-spacing-sm);
+  padding: var(--tr-spacing-sm) var(--tr-spacing-md);
   background-color: var(--el-fill-color);
-  border-radius: 6px;
-  margin-bottom: 12px;
+  border-radius: var(--tr-radius-sm);
+  margin-bottom: var(--tr-spacing-sm);
 }
 
 .group-header h4 {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   font-weight: 500;
   color: var(--el-text-color-primary);
 }
@@ -294,36 +310,51 @@ onMounted(async () => {
 .group-news {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--tr-spacing-sm);
 }
 
 .rss-news-item {
-  padding: 16px;
+  padding: var(--tr-spacing-sm);
   background-color: var(--el-fill-color-light);
-  border-radius: 8px;
-  transition: all 0.3s;
+  border-radius: var(--tr-radius-md);
+  transition: all var(--tr-transition-normal);
 }
 
-.rss-news-item:hover {
-  background-color: var(--el-fill-color);
-  transform: translateX(4px);
+@media (min-width: 768px) {
+  .rss-news-item {
+    padding: var(--tr-spacing-md);
+  }
+  .rss-news-item:hover {
+    background-color: var(--el-fill-color);
+    transform: translateX(4px);
+  }
 }
 
 .rss-news-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--tr-spacing-xs);
 }
 
 .rss-news-title {
-  font-size: 16px;
+  font-size: var(--tr-font-size-base);
   font-weight: 500;
   margin: 0;
+}
+
+@media (min-width: 768px) {
+  .rss-news-title {
+    font-size: var(--tr-font-size-md);
+  }
 }
 
 .rss-news-title a {
   color: var(--el-text-color-primary);
   text-decoration: none;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rss-news-title a:hover {
@@ -332,7 +363,7 @@ onMounted(async () => {
 }
 
 .rss-news-summary {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   color: var(--el-text-color-regular);
   line-height: 1.6;
 }
@@ -340,8 +371,8 @@ onMounted(async () => {
 .rss-news-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 12px;
+  gap: var(--tr-spacing-sm);
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
 }
 
@@ -349,10 +380,5 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.time {
-  display: flex;
-  align-items: center;
 }
 </style>

@@ -2,23 +2,23 @@
   <div class="topics-page">
     <!-- 顶部控制栏 -->
     <el-card class="control-card">
-      <el-row :gutter="20" align="middle">
-        <el-col :span="8">
-          <el-radio-group v-model="topicMode" @change="handleModeChange">
-            <el-radio-button label="current">当前榜单</el-radio-button>
-            <el-radio-button label="daily">当日汇总</el-radio-button>
+      <el-row :gutter="isMobile ? 10 : 20" align="middle">
+        <el-col :xs="24" :md="8" class="control-col">
+          <el-radio-group v-model="topicMode" size="small" @change="handleModeChange">
+            <el-radio-button label="current">当前</el-radio-button>
+            <el-radio-button label="daily">当日</el-radio-button>
           </el-radio-group>
         </el-col>
-        <el-col :span="8">
-          <el-select v-model="topN" placeholder="显示数量" @change="loadTopics">
+        <el-col :xs="12" :md="8" class="control-col">
+          <el-select v-model="topN" placeholder="数量" size="small" @change="loadTopics">
             <el-option label="Top 10" :value="10" />
             <el-option label="Top 20" :value="20" />
             <el-option label="Top 50" :value="50" />
             <el-option label="Top 100" :value="100" />
           </el-select>
         </el-col>
-        <el-col :span="8">
-          <el-button type="primary" @click="loadTopics" :loading="loading">
+        <el-col :xs="12" :md="8" class="control-col">
+          <el-button type="primary" size="small" @click="loadTopics" :loading="loading">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
@@ -78,8 +78,8 @@
             </template>
 
             <div class="detail-stats">
-              <el-row :gutter="20">
-                <el-col :span="8">
+              <el-row :gutter="isMobile ? 10 : 20">
+                <el-col :xs="12" :md="8">
                   <div class="stat-item">
                     <div class="stat-label">新闻数量</div>
                     <div class="stat-value">{{ expandedTopic.count }}</div>
@@ -113,7 +113,7 @@
                 </div>
                 <div class="news-content">
                   <div class="news-title-line">
-                    <a :href="item.url" target="_blank" rel="noopener noreferrer">
+                    <a :href="topicItemUrl(item)" target="_blank" rel="noopener noreferrer">
                       {{ item.title }}
                     </a>
                     <el-tag v-if="item.is_new" size="small" type="success">新增</el-tag>
@@ -137,9 +137,17 @@
 import { computed, ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useNewsStore } from '@/stores/news'
-import type { Topic } from '@/types'
+import { useResponsive } from '@/composables/useResponsive'
+import type { Topic, TitleItem } from '@/types'
 
 const newsStore = useNewsStore()
+const { isMobile } = useResponsive()
+
+/** 获取话题新闻链接：移动端优先 mobile_url */
+function topicItemUrl(item: TitleItem): string {
+  if (isMobile.value && item.mobile_url) return item.mobile_url
+  return item.url
+}
 
 // 状态
 const topicMode = ref('current')
@@ -202,44 +210,71 @@ onMounted(() => {
 
 <style scoped>
 .topics-page {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .topics-page {
+    padding: var(--tr-spacing-md);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }
 
 .control-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
+}
+
+.control-col {
+  margin-bottom: var(--tr-spacing-xs);
+}
+
+@media (min-width: 768px) {
+  .control-col {
+    margin-bottom: 0;
+  }
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--tr-spacing-sm);
 }
 
 .topics-container {
-  padding: 10px 0;
+  padding: var(--tr-spacing-sm) 0;
 }
 
 /* 话题排名部分 */
 .topics-rank-section {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .topic-rank-item {
   display: flex;
   align-items: center;
-  padding: 16px 20px;
-  margin-bottom: 8px;
+  padding: var(--tr-spacing-sm);
+  margin-bottom: var(--tr-spacing-xs);
   background-color: var(--el-fill-color-light);
-  border-radius: 8px;
+  border-radius: var(--tr-radius-md);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all var(--tr-transition-normal);
+}
+
+@media (min-width: 768px) {
+  .topic-rank-item {
+    padding: var(--tr-spacing-md) var(--tr-spacing-md);
+  }
 }
 
 .topic-rank-item:hover {
   background-color: var(--el-fill-color);
-  transform: translateX(4px);
+}
+
+@media (min-width: 768px) {
+  .topic-rank-item:hover {
+    transform: translateX(4px);
+  }
 }
 
 .topic-rank-item.top-3 {
@@ -247,16 +282,25 @@ onMounted(() => {
 }
 
 .rank-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--tr-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  margin-right: 16px;
+  margin-right: var(--tr-spacing-sm);
   flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .rank-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    margin-right: var(--tr-spacing-md);
+  }
 }
 
 .rank-1 {
@@ -293,42 +337,40 @@ onMounted(() => {
 }
 
 .topic-word {
-  font-size: 16px;
+  font-size: var(--tr-font-size-base);
   font-weight: 500;
   color: var(--el-text-color-primary);
   margin-bottom: 4px;
 }
 
+@media (min-width: 768px) {
+  .topic-word {
+    font-size: var(--tr-font-size-md);
+  }
+}
+
 .topic-stats {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 12px;
+  gap: var(--tr-spacing-sm);
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
-}
-
-.topic-count {
-  display: flex;
-  align-items: center;
-}
-
-.topic-percentage {
-  display: flex;
-  align-items: center;
 }
 
 .topic-arrow {
   color: var(--el-text-color-secondary);
-  transition: transform 0.3s;
+  transition: transform var(--tr-transition-normal);
 }
 
-.topic-rank-item:hover .topic-arrow {
-  transform: translateX(4px);
+@media (min-width: 768px) {
+  .topic-rank-item:hover .topic-arrow {
+    transform: translateX(4px);
+  }
 }
 
 /* 话题详情部分 */
 .topic-detail-section {
-  animation: slideDown 0.3s ease;
+  animation: slideDown var(--tr-transition-normal);
 }
 
 @keyframes slideDown {
@@ -343,7 +385,7 @@ onMounted(() => {
 }
 
 .topic-detail-card {
-  margin-top: 16px;
+  margin-top: var(--tr-spacing-md);
 }
 
 .detail-header {
@@ -354,11 +396,11 @@ onMounted(() => {
 
 .detail-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--tr-font-size-lg);
 }
 
 .detail-stats {
-  padding: 20px 0;
+  padding: var(--tr-spacing-md) 0;
 }
 
 .stat-item {
@@ -366,28 +408,28 @@ onMounted(() => {
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
-  margin-bottom: 8px;
+  margin-bottom: var(--tr-spacing-xs);
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: var(--tr-font-size-xl);
   font-weight: 600;
   color: var(--el-color-primary);
 }
 
 .topic-news-list {
-  padding: 10px 0;
+  padding: var(--tr-spacing-sm) 0;
 }
 
 .topic-news-item {
   display: flex;
   align-items: flex-start;
-  padding: 12px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s;
+  padding: var(--tr-spacing-sm);
+  margin-bottom: var(--tr-spacing-xs);
+  border-radius: var(--tr-radius-sm);
+  transition: background-color var(--tr-transition-fast);
 }
 
 .topic-news-item:hover {
@@ -396,7 +438,7 @@ onMounted(() => {
 
 .news-checkbox {
   flex-shrink: 0;
-  margin-right: 12px;
+  margin-right: var(--tr-spacing-sm);
   margin-top: 2px;
 }
 
@@ -408,14 +450,18 @@ onMounted(() => {
 .news-title-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--tr-spacing-xs);
   margin-bottom: 4px;
 }
 
 .news-title-line a {
   color: var(--el-text-color-primary);
   text-decoration: none;
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .news-title-line a:hover {
@@ -426,23 +472,8 @@ onMounted(() => {
 .news-meta-line {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 12px;
+  gap: var(--tr-spacing-sm);
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
-}
-
-.source {
-  display: flex;
-  align-items: center;
-}
-
-.time {
-  display: flex;
-  align-items: center;
-}
-
-.count {
-  display: flex;
-  align-items: center;
 }
 </style>

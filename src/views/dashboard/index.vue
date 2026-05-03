@@ -13,6 +13,7 @@
               大模型对话
             </router-link>
             <router-link
+              v-if="!isMobile"
               class="link-history"
               :to="{ name: 'NewsByDate', params: { date: todayYMD } }"
             >
@@ -23,16 +24,16 @@
       </template>
       <div class="welcome-content">
         <h1>行业热点雷达</h1>
-        <p class="welcome-sub">多源热榜 · RSS 订阅 · 话题聚合，一站式追踪全网信号</p>
+        <p v-if="!isMobile" class="welcome-sub">多源热榜 · RSS 订阅 · 话题聚合，一站式追踪全网信号</p>
       </div>
     </el-card>
 
-    <!-- 核心 KPI（业界常见指标口径） -->
-    <el-row :gutter="20" class="stats-row">
-      <el-col :xs="24" :sm="12" :md="6">
+    <!-- 核心 KPI -->
+    <el-row :gutter="isMobile ? 10 : 20" class="stats-row">
+      <el-col :xs="12" :md="6">
         <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
-            <el-icon class="stat-icon" color="#409EFF"><Document /></el-icon>
+            <el-icon class="stat-icon" :size="isMobile ? 24 : 32" color="#409EFF"><Document /></el-icon>
             <div class="stat-content">
               <div class="stat-value">{{ newsStore.newsCount }}</div>
               <div class="stat-label">热榜条目</div>
@@ -41,10 +42,10 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
+      <el-col :xs="12" :md="6">
         <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
-            <el-icon class="stat-icon" color="#5b8ff9"><DataAnalysis /></el-icon>
+            <el-icon class="stat-icon" :size="isMobile ? 24 : 32" color="#5b8ff9"><DataAnalysis /></el-icon>
             <div class="stat-content">
               <div class="stat-value">{{ newsStore.hotlistPlatformCount }}</div>
               <div class="stat-label">平台覆盖</div>
@@ -53,10 +54,10 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
+      <el-col :xs="12" :md="6">
         <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
-            <el-icon class="stat-icon" color="#67C23A"><Position /></el-icon>
+            <el-icon class="stat-icon" :size="isMobile ? 24 : 32" color="#67C23A"><Position /></el-icon>
             <div class="stat-content">
               <div class="stat-value">{{ newsStore.rssCount }}</div>
               <div class="stat-label">RSS 条目</div>
@@ -65,10 +66,10 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6">
+      <el-col :xs="12" :md="6">
         <el-card shadow="hover" class="kpi-card">
           <div class="stat-card">
-            <el-icon class="stat-icon" color="#E6A23C"><TrendCharts /></el-icon>
+            <el-icon class="stat-icon" :size="isMobile ? 24 : 32" color="#E6A23C"><TrendCharts /></el-icon>
             <div class="stat-content">
               <div class="stat-value">{{ healthPercent }}</div>
               <div class="stat-label">抓取健康度</div>
@@ -79,8 +80,9 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="second-kpi">
-      <el-col :span="6">
+    <!-- 次要 KPI -->
+    <el-row :gutter="isMobile ? 10 : 20" class="second-kpi">
+      <el-col :xs="12" :md="6">
         <el-card shadow="hover">
           <div class="stat-card compact">
             <div class="stat-content">
@@ -90,7 +92,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :md="6">
         <el-card shadow="hover">
           <div class="stat-card compact">
             <div class="stat-content">
@@ -100,14 +102,14 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :md="12">
         <el-card shadow="hover">
           <div class="stat-card compact time-row">
-            <el-icon class="stat-icon" color="#F56C6C"><Clock /></el-icon>
+            <el-icon class="stat-icon" :size="isMobile ? 20 : 24" color="#F56C6C"><Clock /></el-icon>
             <div class="stat-content">
               <div class="stat-label">数据时间</div>
               <div class="stat-value sm">{{ fullTime(newsStore.lastUpdateTime) }}</div>
-              <div v-if="newsStore.newsDataSource === 'database'" class="stat-hint">
+              <div v-if="newsStore.newsDataSource === 'database' && !isMobile" class="stat-hint">
                 仅展示后端库内数据；外网热榜与 RSS 由定时任务在整点/配置周期内拉取并写入
               </div>
             </div>
@@ -116,7 +118,7 @@
       </el-col>
     </el-row>
 
-    <!-- 有快照的历史日：可下钻到按日/按小时页 -->
+    <!-- 历史快照 -->
     <el-card v-loading="snapshotLoading" class="snapshot-dates-card">
       <template #header>
         <div class="card-header">
@@ -134,8 +136,8 @@
       </template>
       <el-empty
         v-if="!snapshotLoading && snapshotDates.length === 0"
-        description="暂无历史快照；调度或触发抓取后，会按天、按小时累积，此处自动列出有数据的日期"
-        :image-size="72"
+        description="暂无历史快照；调度或触发抓取后，会按天、按小时累积"
+        :image-size="isMobile ? 60 : 72"
       />
       <div v-else class="snapshot-chips">
         <router-link
@@ -156,7 +158,7 @@
       </div>
     </el-card>
 
-    <!-- 平台来源分布（业界看板：结构占比） -->
+    <!-- 平台来源分布 -->
     <el-card class="dist-card" v-if="platformRows.length">
       <template #header>
         <div class="card-header">
@@ -164,14 +166,14 @@
           <el-tag type="info" size="small">条数 / 占比</el-tag>
         </div>
       </template>
-      <el-table :data="platformRows" size="small" stripe max-height="280">
-        <el-table-column prop="name" label="平台" min-width="140" />
-        <el-table-column prop="count" label="条数" width="90" align="right" />
-        <el-table-column label="占比" min-width="200">
+      <el-table :data="platformRows" size="small" stripe :max-height="isMobile ? 200 : 280">
+        <el-table-column prop="name" label="平台" :min-width="isMobile ? 80 : 140" />
+        <el-table-column prop="count" label="条数" width="60" align="right" />
+        <el-table-column label="占比" :min-width="isMobile ? 100 : 200">
           <template #default="{ row }">
             <el-progress
               :percentage="row.pct"
-              :stroke-width="10"
+              :stroke-width="8"
               :format="() => row.pct.toFixed(1) + '%'"
             />
           </template>
@@ -180,22 +182,40 @@
     </el-card>
 
     <!-- 新闻列表和热门话题 -->
-    <el-row :gutter="20">
-      <!-- 新闻列表 -->
-      <el-col :span="16">
+    <el-row :gutter="isMobile ? 10 : 20">
+      <el-col :xs="24" :md="16">
         <el-card>
           <template #header>
             <div class="card-header">
-              <span>最新新闻</span>
-              <el-button type="primary" link @click="loadMore">
-                查看更多 <el-icon><ArrowRight /></el-icon>
-              </el-button>
+              <div class="card-header-left">
+                <el-button
+                  v-if="selectedTopic"
+                  link
+                  type="primary"
+                  size="small"
+                  @click="clearTopicFilter"
+                >
+                  <el-icon><ArrowLeft /></el-icon>
+                  返回全部新闻
+                </el-button>
+                <span v-else>最新新闻</span>
+              </div>
+              <div class="card-header-right">
+                <el-tag v-if="selectedTopic" type="warning" size="small" effect="plain">
+                  # {{ selectedTopic.word }}
+                </el-tag>
+                <el-button type="primary" link @click="loadMore">
+                  查看更多 <el-icon><ArrowRight /></el-icon>
+                </el-button>
+              </div>
             </div>
           </template>
-          <el-empty v-if="newsStore.allNews.length === 0" description="暂无新闻数据" />
+          <!-- 骨架屏加载态 -->
+          <el-skeleton v-if="!selectedTopic && newsStore.allNews.length === 0 && snapshotLoading" :rows="6" animated />
+          <el-empty v-else-if="currentDisplayNews.length === 0" :description="selectedTopic ? '该话题暂无关联新闻' : '暂无新闻数据'" />
           <div v-else class="news-list">
             <div
-              v-for="news in displayedNews"
+              v-for="news in currentDisplayNews"
               :key="newsItemKey(news)"
               class="news-item"
             >
@@ -204,17 +224,17 @@
               </div>
               <div class="news-content">
                 <div class="news-title">
-                  <a :href="news.url" target="_blank" rel="noopener noreferrer">
+                  <a :href="getNewsUrl(news)" target="_blank" rel="noopener noreferrer">
                     {{ news.title }}
                   </a>
                 </div>
                 <div class="news-meta">
-                  <span class="news-source">{{ newsStore.idToName[news.source_id] || news.source_id }}</span>
+                  <span class="news-source">{{ news.source_name }}</span>
                   <span class="news-time">{{ formatTime(news.crawl_time) }}</span>
                   <NewsAiAnalyzeButton
                     :title="news.title"
-                    :url="news.url"
-                    :source-name="newsStore.idToName[news.source_id] || news.source_id"
+                    :url="getNewsUrl(news)"
+                    :source-name="news.source_name"
                   />
                 </div>
               </div>
@@ -224,8 +244,8 @@
       </el-col>
 
       <!-- 热门话题 -->
-      <el-col :span="8">
-        <el-card>
+      <el-col :xs="24" :md="8">
+        <el-card class="topics-card">
           <template #header>
             <div class="card-header">
               <span>热门话题</span>
@@ -235,12 +255,14 @@
               </el-radio-group>
             </div>
           </template>
-          <el-empty v-if="topics.length === 0" description="暂无热门话题" />
+          <el-empty v-if="topics.length === 0" description="暂无热门话题" :image-size="isMobile ? 60 : 80" />
           <div v-else class="topics-list">
             <div
               v-for="(topic, index) in topics"
               :key="topic.word"
               class="topic-item"
+              :class="{ selected: selectedTopic?.word === topic.word }"
+              @click="selectTopic(topic)"
             >
               <div class="topic-rank">{{ index + 1 }}</div>
               <div class="topic-content">
@@ -262,9 +284,11 @@ import dayjs from 'dayjs'
 import { useNewsStore } from '@/stores/news'
 import { getSnapshotAvailableDates } from '@/api/news'
 import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
+import { useResponsive } from '@/composables/useResponsive'
 import type { NewsItem, Topic, SnapshotDateInfo } from '@/types'
 
 const newsStore = useNewsStore()
+const { isMobile } = useResponsive()
 const todayYMD = dayjs().format('YYYY-MM-DD')
 
 const snapshotLoading = ref(false)
@@ -274,8 +298,9 @@ const snapshotTimezone = ref('')
 const topics = ref<Topic[]>([])
 const topicMode = ref('current')
 const displayLimit = ref(10)
+const selectedTopic = ref<Topic | null>(null)
 
-/** 按排名合并各平台后截取，便于列表阅读 */
+/** 按排名合并各平台后截取 */
 const displayedNews = computed(() => {
   const list: NewsItem[] = []
   Object.values(newsStore.newsData).forEach((items) => {
@@ -284,6 +309,55 @@ const displayedNews = computed(() => {
   list.sort((a, b) => (a.rank || 999) - (b.rank || 999))
   return list.slice(0, displayLimit.value)
 })
+
+/** 当前显示的新闻列表：选中话题时按关键词匹配过滤，否则显示全部最新 */
+interface DisplayNewsItem {
+  title: string
+  url: string
+  mobile_url?: string
+  rank: number
+  source_id: string
+  source_name: string
+  crawl_time: string
+}
+
+const currentDisplayNews = computed<DisplayNewsItem[]>(() => {
+  const all = displayedNews.value.map(n => ({
+    title: n.title,
+    url: n.url,
+    mobile_url: n.mobile_url,
+    rank: n.rank,
+    source_id: n.source_id,
+    source_name: n.source_name || newsStore.idToName[n.source_id] || n.source_id,
+    crawl_time: n.crawl_time,
+  }))
+
+  if (selectedTopic.value) {
+    const kw = selectedTopic.value.word
+    return all.filter(item => item.title.includes(kw))
+  }
+  return all
+})
+
+/** 获取新闻链接：移动端优先 mobile_url */
+function getNewsUrl(item: DisplayNewsItem): string {
+  if (isMobile.value && item.mobile_url) return item.mobile_url
+  return item.url
+}
+
+/** 选择话题 */
+function selectTopic(topic: Topic) {
+  if (selectedTopic.value?.word === topic.word) {
+    clearTopicFilter()
+    return
+  }
+  selectedTopic.value = topic
+}
+
+/** 清除话题过滤 */
+function clearTopicFilter() {
+  selectedTopic.value = null
+}
 
 const platformRows = computed(() => {
   const total = newsStore.newsCount || 1
@@ -311,9 +385,8 @@ const healthPercent = computed(() => {
   return `${Math.round((ok / t) * 100)}%`
 })
 
-function newsItemKey(n: NewsItem) {
-  if (n.id) return `id-${n.id}`
-  return `${n.source_id}-${n.rank}-${n.title}`
+function newsItemKey(n: DisplayNewsItem) {
+  return `${n.source_id || n.source_name}-${n.rank}-${n.title}`
 }
 
 function fullTime(timeStr: string) {
@@ -321,7 +394,6 @@ function fullTime(timeStr: string) {
   return dayjs(timeStr).format('YYYY-MM-DD HH:mm:ss')
 }
 
-// 加载时间格式化
 function formatTime(timeStr: string): string {
   if (!timeStr) return '-'
   const day = dayjs(timeStr)
@@ -331,14 +403,12 @@ function formatTime(timeStr: string): string {
   return day.format('MM-DD HH:mm')
 }
 
-// 获取排名样式类
 function getRankClass(rank: number): string {
   if (rank <= 3) return 'rank-top'
   if (rank <= 10) return 'rank-high'
   return 'rank-normal'
 }
 
-// 加载更多
 function loadMore() {
   displayLimit.value += 10
 }
@@ -365,7 +435,6 @@ async function loadSnapshotDates() {
   }
 }
 
-// 加载热门话题
 async function loadTopics() {
   try {
     await newsStore.fetchTrendingTopics(10, topicMode.value)
@@ -375,12 +444,10 @@ async function loadTopics() {
   }
 }
 
-// 监听话题模式变化
 watch(topicMode, () => {
   loadTopics()
 })
 
-// 初始化
 onMounted(async () => {
   void loadSnapshotDates()
   try {
@@ -398,17 +465,29 @@ onMounted(async () => {
 
 <style scoped>
 .dashboard {
-  padding: 20px;
+  padding: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .dashboard {
+    padding: var(--tr-spacing-md);
+  }
 }
 
 .welcome-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .welcome-content h1 {
-  font-size: 24px;
+  font-size: var(--tr-font-size-xl);
   color: var(--el-text-color-primary);
-  margin-bottom: 8px;
+  margin-bottom: var(--tr-spacing-xs);
+}
+
+@media (min-width: 768px) {
+  .welcome-content h1 {
+    font-size: var(--tr-font-size-2xl);
+  }
 }
 
 .welcome-content p,
@@ -418,19 +497,25 @@ onMounted(async () => {
 
 .welcome-sub {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
 }
 
 .stats-row {
-  margin-bottom: 16px;
+  margin-bottom: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .stats-row {
+    margin-bottom: var(--tr-spacing-md);
+  }
 }
 
 .second-kpi {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .snapshot-dates-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .snapshot-chips {
@@ -460,7 +545,7 @@ onMounted(async () => {
 }
 .snap-meta {
   opacity: 0.85;
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
 }
 .snap-link:hover .snap-tag {
   filter: brightness(1.05);
@@ -471,7 +556,7 @@ onMounted(async () => {
 }
 
 .stat-hint {
-  font-size: 11px;
+  font-size: var(--tr-font-size-xs);
   color: var(--el-text-color-placeholder);
   margin-top: 4px;
 }
@@ -481,7 +566,7 @@ onMounted(async () => {
 }
 
 .stat-card.compact .stat-value.sm {
-  font-size: 18px;
+  font-size: var(--tr-font-size-lg);
 }
 
 .time-row {
@@ -493,32 +578,51 @@ onMounted(async () => {
 }
 
 .dist-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .stat-card {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .stat-card {
+    padding: 10px;
+  }
 }
 
 .stat-icon {
-  font-size: 32px;
-  margin-right: 16px;
+  margin-right: var(--tr-spacing-sm);
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .stat-icon {
+    margin-right: var(--tr-spacing-md);
+  }
 }
 
 .stat-content {
   flex: 1;
+  min-width: 0;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: var(--tr-font-size-xl);
   font-weight: 600;
   color: var(--el-text-color-primary);
 }
 
+@media (min-width: 768px) {
+  .stat-value {
+    font-size: 24px;
+  }
+}
+
 .stat-label {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
 }
 
@@ -526,10 +630,24 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--tr-spacing-xs);
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--tr-spacing-xs);
+}
+
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--tr-spacing-xs);
 }
 
 .link-history {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   color: var(--el-color-primary);
   text-decoration: none;
 }
@@ -538,13 +656,19 @@ onMounted(async () => {
 }
 
 .news-list {
-  max-height: 500px;
+  max-height: 400px;
   overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .news-list {
+    max-height: 500px;
+  }
 }
 
 .news-item {
   display: flex;
-  padding: 12px 0;
+  padding: var(--tr-spacing-sm) 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
@@ -553,14 +677,15 @@ onMounted(async () => {
 }
 
 .news-rank {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: var(--tr-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  margin-right: 12px;
+  font-size: var(--tr-font-size-sm);
+  margin-right: var(--tr-spacing-sm);
   flex-shrink: 0;
 }
 
@@ -585,7 +710,7 @@ onMounted(async () => {
 }
 
 .news-title {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   line-height: 1.5;
   margin-bottom: 4px;
 }
@@ -608,12 +733,22 @@ onMounted(async () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 10px;
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
 }
 
 .news-source {
-  margin-right: 12px;
+  margin-right: var(--tr-spacing-sm);
+}
+
+.topics-card {
+  margin-top: var(--tr-spacing-md);
+}
+
+@media (min-width: 768px) {
+  .topics-card {
+    margin-top: 0;
+  }
 }
 
 .topics-list {
@@ -623,12 +758,24 @@ onMounted(async () => {
 
 .topic-item {
   display: flex;
-  padding: 10px 0;
+  padding: var(--tr-spacing-sm);
   border-bottom: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--tr-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--tr-transition-fast);
+}
+
+.topic-item:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+.topic-item.selected {
+  background-color: var(--el-color-primary-light-9);
+  border-color: var(--el-color-primary-light-5);
 }
 
 .topic-rank {
-  width: 24px;
+  min-width: 24px;
   height: 24px;
   border-radius: 50%;
   background-color: var(--el-color-primary);
@@ -636,22 +783,24 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   font-weight: 600;
-  margin-right: 10px;
+  margin-right: var(--tr-spacing-sm);
+  flex-shrink: 0;
 }
 
 .topic-content {
   flex: 1;
+  min-width: 0;
 }
 
 .topic-word {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   color: var(--el-text-color-primary);
 }
 
 .topic-count {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
   margin-top: 2px;
 }

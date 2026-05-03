@@ -1,7 +1,7 @@
 <template>
   <div class="history-page">
     <el-card class="toolbar">
-      <el-space wrap>
+      <el-space wrap :direction="isMobile ? 'vertical' : 'horizontal'" :style="isMobile ? 'width:100%' : ''">
         <span class="label">选择日期</span>
         <el-date-picker
           v-model="picked"
@@ -9,6 +9,7 @@
           value-format="YYYY-MM-DD"
           placeholder="选择一天"
           :disabled-date="disabledFuture"
+          :style="isMobile ? 'width:100%' : ''"
           @change="onDatePicked"
         />
         <el-tag v-if="timezone" type="info" size="small">时区 {{ timezone }}</el-tag>
@@ -22,7 +23,7 @@
           <span>日汇总</span>
           <el-space wrap>
             <el-tag v-if="totalRows >= 0" type="success" size="small">
-              共 {{ totalRows }} 条快照
+              {{ totalRows }} 条
             </el-tag>
             <el-button
               type="primary"
@@ -31,12 +32,12 @@
               :disabled="totalRows <= 0"
               @click="syncToModelScope"
             >
-              {{ exporting ? '同步中...' : '同步到 ModelScope' }}
+              {{ exporting ? '同步中...' : '同步' }}
             </el-button>
           </el-space>
         </div>
       </template>
-      <el-empty v-if="!summaryLoading && totalRows === 0" description="该日尚无热榜快照（调度抓取后会按小时累积）" />
+      <el-empty v-if="!summaryLoading && totalRows === 0" description="该日尚无热榜快照" />
       <div v-else class="hour-bars">
         <div
           v-for="h in 24"
@@ -72,7 +73,7 @@
               v-if="insightsMeta?.digest_truncated"
               type="warning"
               size="small"
-            >输入已截断</el-tag>
+            >已截断</el-tag>
             <el-button
               v-if="totalRows > 0"
               type="primary"
@@ -90,7 +91,7 @@
         v-if="!insightError && totalRows > 0"
         class="insight-legend"
       >
-        在当日热榜标题基础上归纳 <strong>行业机遇</strong>、<strong>可落地与可参与机会</strong>、<strong>普通人可关注的方向</strong>；依据不足时正文会直说。非投资建议。重新生成会按最新说明更新全文。
+        在当日热榜标题基础上归纳 <strong>行业机遇</strong>、<strong>可落地与可参与机会</strong>、<strong>普通人可关注的方向</strong>；依据不足时正文会直说。非投资建议。
       </p>
       <el-alert
         v-if="insightError"
@@ -101,7 +102,7 @@
         class="insight-err"
       />
       <p v-else-if="!insightsLoading && totalRows === 0" class="muted">
-        该日无热榜快照，无法基于标题流生成投研体例的汇总（抓取任务运行后会累积数据）。
+        该日无热榜快照，无法基于标题流生成投研体例的汇总。
       </p>
       <div
         v-else-if="insightsContent"
@@ -112,7 +113,7 @@
         v-else-if="!insightsLoading && !insightError && totalRows > 0"
         class="muted"
       >
-        可点击下方「重新生成」拉取该日热榜并调用模型（首次进入会自动尝试生成）。
+        可点击下方「重新生成」拉取该日热榜并调用模型。
       </p>
     </el-card>
 
@@ -124,10 +125,10 @@
             v-model="filterPlatforms"
             multiple
             collapse-tags
-            collapse-tags-tooltip
-            placeholder="筛选平台"
+            :collapse-tags-tooltip="!isMobile"
+            :placeholder="isMobile ? '筛平台' : '筛选平台'"
             clearable
-            style="min-width: 200px"
+            :style="isMobile ? 'min-width:120px;max-width:180px' : 'min-width:200px'"
             @change="reloadHour"
           >
             <el-option
@@ -182,10 +183,12 @@ import {
 import { postDailyExport } from '@/api/system'
 import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
 import { formatInsightBodyHtml } from '@/utils/insightDisplay'
+import { useResponsive } from '@/composables/useResponsive'
 import type { HotlistSnapshotRow, SnapshotHourStat } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
+const { isMobile } = useResponsive()
 
 const picked = ref<string>('')
 const timezone = ref('')
@@ -207,10 +210,8 @@ const insightsMeta = ref<{ unique_titles?: number; digest_truncated?: boolean } 
 const insightError = ref('')
 
 const currentDate = computed(() => (route.params.date as string) || '')
-
 const insightBodyHtml = computed(() => formatInsightBodyHtml(insightsContent.value))
 
-// ModelScope 同步
 const exporting = ref(false)
 
 async function syncToModelScope() {
@@ -332,7 +333,6 @@ function formatInsightTime(iso: string) {
   return dayjs(iso).format('MM-DD HH:mm')
 }
 
-/** 有快照时：先读缓存，无则自动生成整日研报 */
 async function loadDayInsights() {
   const date = currentDate.value
   insightError.value = ''
@@ -436,7 +436,6 @@ onMounted(async () => {
   try {
     const res = await getSnapshotAvailableDates(90)
     if (res.data?.dates?.length) {
-      // 若当前日无数据且列表中有更近的日期，可仅作信息展示
       void res.data
     }
   } catch {
@@ -447,18 +446,24 @@ onMounted(async () => {
 
 <style scoped>
 .history-page {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .history-page {
+    padding: var(--tr-spacing-md);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }
 
 .toolbar {
-  margin-bottom: 16px;
+  margin-bottom: var(--tr-spacing-md);
 }
 
 .label {
   color: var(--el-text-color-secondary);
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
 }
 
 .card-header {
@@ -466,16 +471,24 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--tr-spacing-xs);
 }
 
 .hour-bars {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
-  height: 120px;
-  padding: 8px 0 24px;
+  gap: 2px;
+  height: 90px;
+  padding: var(--tr-spacing-xs) 0 20px;
   border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+@media (min-width: 768px) {
+  .hour-bars {
+    gap: 4px;
+    height: 120px;
+    padding: var(--tr-spacing-xs) 0 var(--tr-spacing-lg);
+  }
 }
 
 .hour-cell {
@@ -486,8 +499,8 @@ onMounted(async () => {
   align-items: center;
   cursor: pointer;
   position: relative;
-  border-radius: 4px;
-  padding: 4px 2px 0;
+  border-radius: var(--tr-radius-sm);
+  padding: 4px 1px 0;
 }
 
 .hour-cell.empty {
@@ -505,7 +518,7 @@ onMounted(async () => {
 
 .bar {
   width: 100%;
-  max-width: 18px;
+  max-width: 14px;
   min-height: 2px;
   background: var(--el-color-primary);
   border-radius: 2px 2px 0 0;
@@ -513,72 +526,91 @@ onMounted(async () => {
   align-self: center;
 }
 
+@media (min-width: 768px) {
+  .bar {
+    max-width: 18px;
+  }
+}
+
 .hour-cell.empty .bar {
   background: var(--el-border-color);
 }
 
 .hn {
-  font-size: 10px;
+  font-size: 8px;
   color: var(--el-text-color-secondary);
   line-height: 1;
   position: absolute;
-  bottom: -20px;
+  bottom: -18px;
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
 }
 
+@media (min-width: 768px) {
+  .hn {
+    font-size: 10px;
+    bottom: -20px;
+  }
+}
+
 .hint {
-  margin: 24px 0 0;
-  font-size: 12px;
+  margin: var(--tr-spacing-md) 0 0;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-placeholder);
 }
 
 .news-list {
-  max-height: 520px;
+  max-height: 400px;
   overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .news-list {
+    max-height: 520px;
+  }
 }
 
 .news-item {
   display: flex;
-  padding: 10px 0;
+  padding: var(--tr-spacing-sm) 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
-  gap: 10px;
+  gap: var(--tr-spacing-sm);
 }
 
 .news-rank {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--tr-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   flex-shrink: 0;
 }
 
-.rank-top {
-  background: #ffebee;
-  color: #f44336;
+@media (min-width: 768px) {
+  .news-rank {
+    width: 28px;
+    height: 28px;
+  }
 }
-.rank-high {
-  background: #fff3e0;
-  color: #ff9800;
-}
-.rank-normal {
-  background: #f5f5f5;
-  color: #9e9e9e;
-}
+
+.rank-top { background: #ffebee; color: #f44336; }
+.rank-high { background: #fff3e0; color: #ff9800; }
+.rank-normal { background: #f5f5f5; color: #9e9e9e; }
 
 .news-content {
   min-width: 0;
   flex: 1;
 }
+
 .news-title {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   line-height: 1.4;
 }
+
 .news-title a {
   color: var(--el-text-color-primary);
   text-decoration: none;
@@ -587,64 +619,74 @@ onMounted(async () => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .news-title a:hover {
   color: var(--el-color-primary);
 }
+
 .news-meta {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
   margin-top: 4px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 12px;
+  gap: 4px var(--tr-spacing-sm);
 }
 
 .insights-card {
-  margin-top: 16px;
+  margin-top: var(--tr-spacing-md);
 }
+
 .insight-legend {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   line-height: 1.5;
   color: var(--el-text-color-secondary);
-  margin: 0 0 12px;
-  padding: 8px 10px;
+  margin: 0 0 var(--tr-spacing-sm);
+  padding: var(--tr-spacing-xs) var(--tr-spacing-sm);
   background: var(--el-fill-color-lighter);
-  border-radius: 6px;
+  border-radius: var(--tr-radius-sm);
   border-left: 3px solid var(--el-color-primary);
 }
+
 .muted {
   color: var(--el-text-color-secondary);
   font-size: 13px;
   margin: 0;
 }
+
 .insight-updated {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
 }
+
 .insight-body {
   line-height: 1.65;
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   color: var(--el-text-color-primary);
 }
+
 .insight-body :deep(.insight-h2) {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   margin: 1em 0 0.5em;
   color: var(--el-text-color-primary);
   border-bottom: 1px solid var(--el-border-color-lighter);
   padding-bottom: 4px;
 }
+
 .insight-body :deep(.insight-h3) {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   margin: 1em 0 0.4em;
   color: var(--el-color-primary);
 }
+
 .insight-body :deep(strong) {
   font-weight: 600;
   color: var(--el-text-color-primary);
 }
+
 .insight-err {
   margin-bottom: 0;
 }

@@ -15,11 +15,11 @@
     </p>
 
     <el-card shadow="never" class="chat-card" :body-style="{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }">
-      <div ref="listRef" class="msg-list">
+      <div ref="listRef" class="msg-list" @scroll="onScroll">
         <el-empty
           v-if="!messages.length && !loading"
           description="在下方输入内容开始对话，支持多轮连续发言"
-          :image-size="80"
+          :image-size="isMobile ? 60 : 80"
         />
         <div
           v-for="(m, i) in messages"
@@ -29,24 +29,9 @@
         >
           <div class="msg-bubble">
             <div class="msg-role">
-              <el-tag
-                v-if="m.role === 'user'"
-                type="primary"
-                size="small"
-                effect="plain"
-              >我</el-tag>
-              <el-tag
-                v-else-if="m.role === 'assistant'"
-                type="success"
-                size="small"
-                effect="plain"
-              >助手</el-tag>
-              <el-tag
-                v-else
-                type="info"
-                size="small"
-                effect="plain"
-              >系统</el-tag>
+              <el-tag v-if="m.role === 'user'" type="primary" size="small" effect="plain">我</el-tag>
+              <el-tag v-else-if="m.role === 'assistant'" type="success" size="small" effect="plain">助手</el-tag>
+              <el-tag v-else type="info" size="small" effect="plain">系统</el-tag>
             </div>
             <div class="msg-text">{{ m.content }}</div>
           </div>
@@ -59,6 +44,20 @@
         </div>
       </div>
 
+      <!-- 滚动到底部按钮 -->
+      <transition name="fade">
+        <el-button
+          v-if="showScrollBtn"
+          class="scroll-bottom-btn"
+          type="primary"
+          circle
+          size="small"
+          @click="scrollToBottom()"
+        >
+          <el-icon><ArrowDown /></el-icon>
+        </el-button>
+      </transition>
+
       <div v-if="lastUsage" class="usage-bar">
         上次 tokens：输入 {{ lastUsage.prompt_tokens }} · 输出
         {{ lastUsage.completion_tokens }} · 合计 {{ lastUsage.total_tokens }}
@@ -68,7 +67,7 @@
         <el-input
           v-model="input"
           type="textarea"
-          :rows="3"
+          :rows="isMobile ? 2 : 3"
           placeholder="输入你的问题，Enter 发送，Shift+Enter 换行"
           :disabled="loading"
           @keydown="onKeydown"
@@ -89,15 +88,18 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { postAIChat } from '@/api/ai'
+import { useResponsive } from '@/composables/useResponsive'
 import type { AiChatMessage, AiTokenUsage } from '@/types'
 
 const router = useRouter()
+const { isMobile } = useResponsive()
 const listRef = ref<HTMLElement | null>(null)
 const input = ref('')
 const loading = ref(false)
 const messages = ref<AiChatMessage[]>([])
 const lastUsage = ref<AiTokenUsage | null>(null)
 const lastModel = ref('')
+const showScrollBtn = ref(false)
 
 const canSend = computed(
   () => !loading.value && input.value.trim().length > 0
@@ -129,9 +131,20 @@ function scrollToBottom() {
   })
 }
 
+function onScroll() {
+  const el = listRef.value
+  if (el) {
+    // 如果距离底部超过 200px，显示回到底部按钮
+    showScrollBtn.value = el.scrollHeight - el.scrollTop - el.clientHeight > 200
+  }
+}
+
 watch(
   () => messages.value.length,
-  () => scrollToBottom()
+  () => {
+    scrollToBottom()
+    showScrollBtn.value = false
+  }
 )
 
 async function send() {
@@ -171,78 +184,110 @@ async function send() {
 .chat-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px 16px 32px;
+  padding: var(--tr-spacing-sm) var(--tr-spacing-sm) var(--tr-spacing-lg);
   min-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
 }
 
-.page-head {
-  margin-bottom: 8px;
+@media (min-width: 768px) {
+  .chat-page {
+    padding: var(--tr-spacing-md) var(--tr-spacing-md) var(--tr-spacing-xl);
+  }
 }
+
+.page-head {
+  margin-bottom: var(--tr-spacing-xs);
+}
+
 .title {
-  font-size: 18px;
+  font-size: var(--tr-font-size-lg);
   font-weight: 600;
 }
+
 .ml8 {
-  margin-left: 8px;
+  margin-left: var(--tr-spacing-xs);
 }
 
 .hint {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
   line-height: 1.5;
-  margin: 0 0 12px;
+  margin: 0 0 var(--tr-spacing-sm);
 }
 
 .chat-card {
   flex: 1;
-  min-height: 480px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--el-border-color-lighter);
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .chat-card {
+    min-height: 480px;
+  }
 }
 
 .msg-list {
   flex: 1;
-  min-height: 240px;
-  max-height: min(60vh, 640px);
+  min-height: 200px;
+  max-height: calc(100vh - 280px);
   overflow-y: auto;
-  padding: 16px;
+  padding: var(--tr-spacing-sm);
   background: var(--el-fill-color-blank);
+}
+
+@media (min-width: 768px) {
+  .msg-list {
+    padding: var(--tr-spacing-md);
+    max-height: min(60vh, 640px);
+  }
 }
 
 .msg-row {
   display: flex;
-  margin-bottom: 12px;
+  margin-bottom: var(--tr-spacing-sm);
 }
+
 .msg-row.user {
   justify-content: flex-end;
 }
+
 .msg-row.assistant,
 .msg-row.system {
   justify-content: flex-start;
 }
 
 .msg-bubble {
-  max-width: 88%;
-  padding: 10px 12px;
-  border-radius: 8px;
+  max-width: 92%;
+  padding: var(--tr-spacing-sm);
+  border-radius: var(--tr-radius-md);
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color-lighter);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--tr-shadow-sm);
 }
+
+@media (min-width: 768px) {
+  .msg-bubble {
+    max-width: 88%;
+    padding: 10px 12px;
+  }
+}
+
 .msg-row.user .msg-bubble {
   background: var(--el-color-primary-light-9);
   border-color: var(--el-color-primary-light-5);
 }
 
 .msg-role {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .msg-text {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
@@ -252,28 +297,59 @@ async function send() {
 .loading-bubble {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--tr-spacing-xs);
   color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 
+/* 滚动到底部按钮 */
+.scroll-bottom-btn {
+  position: absolute;
+  bottom: 140px;
+  right: var(--tr-spacing-md);
+  z-index: 10;
+  box-shadow: var(--tr-shadow-md);
+}
+
 .usage-bar {
-  font-size: 11px;
+  font-size: var(--tr-font-size-xs);
   color: var(--el-text-color-placeholder);
-  padding: 4px 16px 8px;
+  padding: 4px var(--tr-spacing-sm) var(--tr-spacing-xs);
   border-top: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color);
 }
 
+@media (min-width: 768px) {
+  .usage-bar {
+    padding: 4px var(--tr-spacing-md) var(--tr-spacing-xs);
+  }
+}
+
 .composer {
   border-top: 1px solid var(--el-border-color);
-  padding: 12px 16px 16px;
+  padding: var(--tr-spacing-sm);
   background: var(--el-bg-color);
 }
 
+@media (min-width: 768px) {
+  .composer {
+    padding: 12px var(--tr-spacing-md) var(--tr-spacing-md);
+  }
+}
+
 .composer-actions {
-  margin-top: 8px;
+  margin-top: var(--tr-spacing-xs);
   display: flex;
   justify-content: flex-end;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--tr-transition-fast);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

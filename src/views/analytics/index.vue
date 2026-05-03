@@ -12,7 +12,7 @@
               <span>话题趋势分析</span>
             </div>
           </template>
-          <el-form :inline="true">
+          <el-form :inline="!isMobile" :class="{ 'form-mobile': isMobile }">
             <el-form-item label="话题关键词">
               <el-input v-model="trendTopic" placeholder="输入话题关键词" />
             </el-form-item>
@@ -35,7 +35,6 @@
             </el-form-item>
           </el-form>
 
-          <!-- 趋势图表 -->
           <div v-if="trendData.length" class="chart-card">
             <h4>{{ trendTopic }} - 热度趋势</h4>
             <div class="bar-chart">
@@ -50,7 +49,7 @@
               </div>
             </div>
           </div>
-          <el-empty v-else description="输入话题关键词并点击分析" />
+          <el-empty v-else description="输入话题关键词并点击分析" :image-size="isMobile ? 60 : 80" />
         </el-card>
       </el-tab-pane>
 
@@ -62,7 +61,7 @@
               <span>情感倾向分析</span>
             </div>
           </template>
-          <el-form :inline="true">
+          <el-form :inline="!isMobile" :class="{ 'form-mobile': isMobile }">
             <el-form-item label="话题">
               <el-input v-model="sentTopic" placeholder="输入话题关键词" />
             </el-form-item>
@@ -82,22 +81,22 @@
           </el-form>
 
           <div v-if="sentResult" class="sentiment-result">
-            <el-row :gutter="20">
-              <el-col :span="8">
+            <el-row :gutter="isMobile ? 10 : 20">
+              <el-col :xs="24" :md="8" class="sent-col">
                 <div class="stat-card positive">
                   <div class="stat-num">{{ sentResult.distribution?.positive || 0 }}</div>
                   <div class="stat-label">正面</div>
                   <div class="stat-pct">{{ sentResult.percentages?.positive?.toFixed(1) || 0 }}%</div>
                 </div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :md="8" class="sent-col">
                 <div class="stat-card neutral">
                   <div class="stat-num">{{ sentResult.distribution?.neutral || 0 }}</div>
                   <div class="stat-label">中性</div>
                   <div class="stat-pct">{{ sentResult.percentages?.neutral?.toFixed(1) || 0 }}%</div>
                 </div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :md="8" class="sent-col">
                 <div class="stat-card negative">
                   <div class="stat-num">{{ sentResult.distribution?.negative || 0 }}</div>
                   <div class="stat-label">负面</div>
@@ -114,7 +113,7 @@
               class="sent-alert"
             />
           </div>
-          <el-empty v-else description="输入话题关键词并点击分析" />
+          <el-empty v-else description="输入话题关键词并点击分析" :image-size="isMobile ? 60 : 80" />
         </el-card>
       </el-tab-pane>
 
@@ -126,7 +125,7 @@
               <span>时期对比分析</span>
             </div>
           </template>
-          <el-form :inline="true">
+          <el-form :inline="!isMobile" :class="{ 'form-mobile': isMobile }">
             <el-form-item label="时期 1">
               <el-date-picker
                 v-model="period1"
@@ -155,14 +154,14 @@
           </el-form>
 
           <div v-if="compareResult" class="compare-result">
-            <el-row :gutter="20" class="compare-summary">
-              <el-col :span="12">
+            <el-row :gutter="isMobile ? 10 : 20" class="compare-summary">
+              <el-col :xs="12" :md="12">
                 <div class="stat-card">
                   <div class="stat-num">{{ compareResult.period1?.total || 0 }}</div>
                   <div class="stat-label">时期 1 新闻数</div>
                 </div>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="12" :md="12">
                 <div class="stat-card">
                   <div class="stat-num">{{ compareResult.period2?.total || 0 }}</div>
                   <div class="stat-label">时期 2 新闻数</div>
@@ -194,7 +193,7 @@
               </div>
             </div>
           </div>
-          <el-empty v-else description="选择两个时期并点击对比" />
+          <el-empty v-else description="选择两个时期并点击对比" :image-size="isMobile ? 60 : 80" />
         </el-card>
       </el-tab-pane>
     </el-tabs>
@@ -205,7 +204,9 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/client'
+import { useResponsive } from '@/composables/useResponsive'
 
+const { isMobile } = useResponsive()
 const activeTab = ref('trend')
 
 // 趋势分析
@@ -315,46 +316,81 @@ async function comparePeriods() {
   }
 }
 
-function onTabChange(_tab: string) {
-  // 切换 tab 时不清空数据
-}
+function onTabChange(_tab: string) {}
 </script>
 
 <style scoped>
 .analytics-page {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .analytics-page {
+    padding: var(--tr-spacing-md);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }
 
 .page-title {
-  margin: 0 0 20px;
-  font-size: 22px;
+  margin: 0 0 var(--tr-spacing-md);
+  font-size: var(--tr-font-size-xl);
   font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .page-title {
+    font-size: var(--tr-font-size-2xl);
+  }
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--tr-spacing-sm);
+}
+
+/* 移动端表单堆叠 */
+.form-mobile :deep(.el-form-item) {
+  display: block;
+  margin-bottom: var(--tr-spacing-sm);
+}
+
+.form-mobile :deep(.el-form-item__label) {
+  width: auto !important;
+}
+
+.form-mobile :deep(.el-select) {
+  width: 100%;
+}
+
+.form-mobile :deep(.el-date-editor) {
+  width: 100%;
 }
 
 /* 柱状图 */
 .chart-card {
-  margin-top: 20px;
+  margin-top: var(--tr-spacing-md);
 }
 
 .chart-card h4 {
-  margin: 0 0 16px;
+  margin: 0 0 var(--tr-spacing-md);
 }
 
 .bar-chart {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
-  height: 200px;
-  padding: 16px 0;
+  gap: 4px;
+  height: 180px;
+  padding: var(--tr-spacing-md) 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+@media (min-width: 768px) {
+  .bar-chart {
+    gap: 8px;
+    height: 200px;
+  }
 }
 
 .bar-item {
@@ -367,35 +403,63 @@ function onTabChange(_tab: string) {
 
 .bar {
   width: 100%;
-  max-width: 40px;
+  max-width: 32px;
   background: linear-gradient(180deg, var(--el-color-primary) 0%, var(--el-color-primary-light-5) 100%);
-  border-radius: 4px 4px 0 0;
+  border-radius: var(--tr-radius-sm) var(--tr-radius-sm) 0 0;
   min-height: 4px;
-  transition: height 0.3s;
+  transition: height var(--tr-transition-normal);
+}
+
+@media (min-width: 768px) {
+  .bar {
+    max-width: 40px;
+  }
 }
 
 .bar-label {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--el-text-color-secondary);
   margin-top: 6px;
 }
 
+@media (min-width: 768px) {
+  .bar-label {
+    font-size: 10px;
+  }
+}
+
 .bar-value {
-  font-size: 11px;
+  font-size: var(--tr-font-size-xs);
   font-weight: 500;
   color: var(--el-text-color-primary);
 }
 
 /* 情感分析 */
 .sentiment-result {
-  margin-top: 20px;
+  margin-top: var(--tr-spacing-md);
+}
+
+.sent-col {
+  margin-bottom: var(--tr-spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .sent-col {
+    margin-bottom: 0;
+  }
 }
 
 .stat-card {
   text-align: center;
-  padding: 24px;
-  border-radius: 8px;
+  padding: var(--tr-spacing-md);
+  border-radius: var(--tr-radius-md);
   background: var(--el-fill-color-light);
+}
+
+@media (min-width: 768px) {
+  .stat-card {
+    padding: var(--tr-spacing-lg);
+  }
 }
 
 .stat-card.positive {
@@ -411,69 +475,90 @@ function onTabChange(_tab: string) {
 }
 
 .stat-num {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--el-text-color-primary);
 }
 
+@media (min-width: 768px) {
+  .stat-num {
+    font-size: 32px;
+  }
+}
+
 .stat-label {
-  font-size: 14px;
+  font-size: var(--tr-font-size-base);
   color: var(--el-text-color-secondary);
   margin-top: 4px;
 }
 
 .stat-pct {
-  font-size: 12px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-placeholder);
   margin-top: 2px;
 }
 
 .sent-alert {
-  margin-top: 16px;
+  margin-top: var(--tr-spacing-md);
 }
 
 /* 时期对比 */
 .compare-result {
-  margin-top: 20px;
+  margin-top: var(--tr-spacing-md);
 }
 
 .compare-summary {
-  margin-bottom: 24px;
+  margin-bottom: var(--tr-spacing-lg);
 }
 
 .compare-result h4 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--tr-spacing-sm);
 }
 
 .keyword-changes {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--tr-spacing-xs);
 }
 
 .kw-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0;
+  gap: var(--tr-spacing-sm);
+  padding: var(--tr-spacing-xs) 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .kw-word {
-  width: 120px;
+  width: 80px;
   font-weight: 500;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .kw-word {
+    width: 120px;
+  }
 }
 
 .kw-counts {
-  width: 80px;
-  font-size: 12px;
+  width: 70px;
+  font-size: var(--tr-font-size-sm);
   color: var(--el-text-color-secondary);
   flex-shrink: 0;
 }
 
+@media (min-width: 768px) {
+  .kw-counts {
+    width: 80px;
+  }
+}
+
 .kw-change {
-  width: 60px;
+  width: 50px;
   font-size: 13px;
   font-weight: 600;
   flex-shrink: 0;
