@@ -5,8 +5,14 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
+    component: () => import('@/views/home/HomePage.vue'),
+    meta: { title: '热点事件' },
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
     component: () => import('@/views/dashboard/index.vue'),
-    meta: { title: '首页' },
+    meta: { title: '仪表盘' },
   },
   {
     path: '/news',

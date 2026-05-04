@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { NewsItem, RSSItem, Topic, MergedNewsItem } from '@/types'
+import type { NewsItem, RSSItem, Topic, MergedNewsItem, HotEvent, PlatformSummary } from '@/types'
 import { getLatestNews, getTrendingTopics, getLatestRSS } from '@/api/news'
 
 export const useNewsStore = defineStore('news', () => {
@@ -41,6 +41,35 @@ export const useNewsStore = defineStore('news', () => {
   const hotlistPlatformCount = computed(
     () => Object.keys(newsData.value).filter((k) => (newsData.value[k]?.length ?? 0) > 0).length
   )
+
+  /** 热门事件（按热度分降序） */
+  const hotEvents = computed<HotEvent[]>(() => {
+    return mergedNews.value
+      .map((m) => ({
+        title: m.title,
+        url: m.url,
+        mobile_url: m.mobile_url,
+        heat_score: (100 - m.max_rank) * m.total_count,
+        sources: m.sources,
+        source_count: m.total_count,
+        max_rank: m.max_rank,
+        crawl_time: m.crawl_time,
+      }))
+      .sort((a, b) => b.heat_score - a.heat_score)
+  })
+
+  /** 平台覆盖摘要 */
+  const platformSummary = computed<PlatformSummary[]>(() => {
+    return Object.keys(idToName.value).map((id) => {
+      const items = newsData.value[id] || []
+      return {
+        id,
+        name: idToName.value[id] || id,
+        item_count: items.length,
+        status: (items.length > 0 ? 'active' : 'empty') as PlatformSummary['status'],
+      }
+    })
+  })
 
   // Actions
   async function fetchLatestNews(
@@ -137,6 +166,8 @@ export const useNewsStore = defineStore('news', () => {
     newsCount,
     rssCount,
     hotlistPlatformCount,
+	    hotEvents,
+	    platformSummary,
 
     // Actions
     fetchLatestNews,

@@ -66,6 +66,21 @@ html, body {
   --sidebar-collapsed-width: 64px;
   --header-height: 60px;
   --bottom-nav-height: 56px;
+
+  /* 知微事见风格 — 白色卡片设计系统 */
+  --tr-bg-page: #F8FAFC;
+  --tr-bg-card: #FFFFFF;
+  --tr-text-body: #334155;
+  --tr-text-muted: #94A3B8;
+  --tr-border-subtle: #E2E8F0;
+  --tr-border-card: #F1F5F9;
+  --tr-color-heat-high: #EF4444;
+  --tr-color-heat-mid: #F59E0B;
+  --tr-color-heat-low: #10B981;
+  --tr-color-accent: #3B82F6;
+  --tr-color-accent-light: #EFF6FF;
+  --tr-shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --tr-shadow-card-hover: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
 }
 
 /* ---- Responsive Breakpoints (用于 JS composable) ---- */
@@ -78,6 +93,8 @@ body {
   padding-bottom: var(--sab);
   padding-left: var(--sal);
   padding-right: var(--sar);
+  background: var(--tr-bg-page);
+  color: var(--tr-text-body);
 }
 
 /* ---- Scrollbar (Webkit) ---- */
@@ -119,6 +136,17 @@ html.dark {
   --el-color-primary: #5ca3ff;
   --el-color-primary-light-5: #337ecc;
   --el-color-primary-light-9: #1a2942;
+
+  /* 暗色覆盖 — 知微事见 tokens */
+  --tr-bg-page: #0F172A;
+  --tr-bg-card: #1E293B;
+  --tr-text-body: #CBD5E1;
+  --tr-text-muted: #64748B;
+  --tr-border-subtle: #334155;
+  --tr-border-card: #1E293B;
+  --tr-color-accent-light: #1E3A5F;
+  --tr-shadow-card: 0 1px 3px rgba(0,0,0,0.2);
+  --tr-shadow-card-hover: 0 10px 15px -3px rgba(0,0,0,0.3);
 }
 
 html.dark ::-webkit-scrollbar-thumb {
@@ -150,16 +178,35 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 }
 
 .card {
-  background: var(--el-bg-color);
-  border-radius: var(--tr-radius-md);
+  background: var(--tr-bg-card);
+  border: 1px solid var(--tr-border-card);
+  border-radius: var(--tr-radius-lg);
   padding: var(--tr-spacing-md);
   margin-bottom: var(--tr-spacing-md);
-  box-shadow: var(--tr-shadow-sm);
-  transition: box-shadow var(--tr-transition-normal);
+  box-shadow: var(--tr-shadow-card);
+  transition: box-shadow var(--tr-transition-normal), transform var(--tr-transition-normal);
 }
 
 .card:hover {
-  box-shadow: var(--tr-shadow-md);
+  box-shadow: var(--tr-shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+/* 知微事见风格事件卡片 */
+.event-card {
+  background: var(--tr-bg-card);
+  border: 1px solid var(--tr-border-card);
+  border-radius: var(--tr-radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--tr-shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.event-card:hover {
+  box-shadow: var(--tr-shadow-card-hover);
+  transform: translateY(-2px);
+  border-color: var(--tr-border-subtle);
 }
 
 .loading-container {

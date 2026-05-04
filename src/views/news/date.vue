@@ -17,6 +17,17 @@
       </el-space>
     </el-card>
 
+    <!-- ========== 业界仪表盘 ========== -->
+    <DashboardCards
+      title="当日数据仪表盘"
+      :total-items="totalRows"
+      :platform-count="platformCount"
+      :topic-count="dateTopics.length"
+      :update-time="currentDate"
+      :platforms="datePlatformSummary"
+      :topics="dateTopics"
+    />
+
     <el-card v-loading="summaryLoading">
       <template #header>
         <div class="card-header">
@@ -179,9 +190,11 @@ import {
   getSnapshotDayInsights,
   postSnapshotDayInsights,
   getSnapshotHour,
+  getTrendingTopics,
 } from '@/api/news'
 import { postDailyExport } from '@/api/system'
 import NewsAiAnalyzeButton from '@/components/NewsAiAnalyzeButton.vue'
+import DashboardCards from '@/components/hotspot/DashboardCards.vue'
 import { formatInsightBodyHtml } from '@/utils/insightDisplay'
 import { useResponsive } from '@/composables/useResponsive'
 import type { HotlistSnapshotRow, SnapshotHourStat } from '@/types'
@@ -211,6 +224,13 @@ const insightError = ref('')
 
 const currentDate = computed(() => (route.params.date as string) || '')
 const insightBodyHtml = computed(() => formatInsightBodyHtml(insightsContent.value))
+
+  // 仪表盘数据
+  const platformCount = computed(() => Object.keys(idToName.value).length)
+  // 平台覆盖 — 优先使用后端返回的真实分布
+  const datePlatformSummary = ref<Array<{ id: string; name: string; item_count: number }>>([])
+  // 每日话题
+  const dateTopics = ref<Array<{ word: string; count: number }>>([])
 
 const exporting = ref(false)
 
@@ -280,6 +300,9 @@ async function loadSummary(date: string) {
       totalRows.value = res.data.total_rows
       hourStats.value = res.data.hours || []
       idToName.value = res.data.id_to_name || {}
+      if (res.data.platform_summary) {
+        datePlatformSummary.value = res.data.platform_summary
+      }
       let max = 1
       for (const h of hourStats.value) {
         if (h.row_count > max) max = h.row_count
@@ -292,6 +315,13 @@ async function loadSummary(date: string) {
   } finally {
     summaryLoading.value = false
   }
+  // 加载每日话题
+  try {
+    const topicRes = await getTrendingTopics(8, 'daily')
+    if (topicRes.data?.topics) {
+      dateTopics.value = topicRes.data.topics
+    }
+  } catch { /* ignore */ }
 }
 
 async function loadHour(date: string, hour: number) {

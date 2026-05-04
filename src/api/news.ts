@@ -10,6 +10,7 @@ import type {
   SnapshotDaySummaryData,
   SnapshotDayInsightsData,
   SnapshotHourData,
+  HotEventsResponse,
 } from '@/types'
 
 /** 单条新闻：拉取（若可）正文并由 AI 生成读报式摘要（需用户主动点击，非自动） */
@@ -200,6 +201,11 @@ export function searchRSS(
       limit,
     },
   })
+}
+
+/** 获取首页热门事件（含热度分 + 平台摘要） */
+export function fetchHotEvents(): Promise<ApiResponse<HotEventsResponse>> {
+  return request.get('/news/hot')
 }
 
 // 获取 RSS 源状态

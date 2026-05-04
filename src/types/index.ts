@@ -167,6 +167,7 @@ export interface SnapshotDaySummaryData {
   total_rows: number
   hours: SnapshotHourStat[]
   id_to_name: Record<string, string>
+  platform_summary?: PlatformSummary[]
 }
 
 export interface SnapshotHourData {
@@ -218,4 +219,32 @@ export interface AiChatResponseData {
   usage: AiTokenUsage
   model: string
   timeout?: string
+}
+
+/** 首页热门事件（含服务端计算的热度分） */
+export interface HotEvent {
+  title: string
+  url: string
+  mobile_url: string
+  heat_score: number
+  sources: NewsSource[]
+  source_count: number
+  max_rank: number
+  crawl_time: string
+}
+
+/** 平台摘要 */
+export interface PlatformSummary {
+  id: string
+  name: string
+  item_count: number
+  status: 'active' | 'empty' | 'error'
+}
+
+/** GET /news/hot 响应 */
+export interface HotEventsResponse {
+  hot_events: HotEvent[]
+  platforms: PlatformSummary[]
+  total_events: number
+  crawl_time: string
 }
